@@ -74,7 +74,7 @@ def main():
                     CRITICAL: 'CRIT',
                     UNKNOWN: 'UNK'}
 
-    # Cache instance classes as listed on 
+    # Cache instance classes as listed on
     # http://aws.amazon.com/elasticache/pricing/
     elasticache_classes = {'cache.t2.micro': 0.555,
                            'cache.t2.small': 1.55,
