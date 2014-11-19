@@ -165,13 +165,10 @@ def main():
     if options.metric == 'status':
         info = get_instance_info(options.region, options.ident)
         if not info:
-            status = UNKNOWN
+            status = CRITICAL
             note = 'Unable to get ElastiCache instance'
         else:
-            if info['CacheClusterStatus'] == 'available':
-                status = OK
-            else:
-                status = CRITICAL
+            status = OK
             note = '%s %s. Status: %s' % (info['Engine'],
                    info['EngineVersion'], info['CacheClusterStatus'])
 
