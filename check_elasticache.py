@@ -272,7 +272,8 @@ def main():
             parser.error('Unit is not valid.')
 
         info = get_cluster_info(options.region, options.ident)
-        free = get_cluster_stats(options.node, 60, tm - datetime.timedelta(seconds=60), tm,
+        free = get_cluster_stats(options.node, 60, tm -
+                                 datetime.timedelta(seconds=60), tm,
                                  metrics[options.metric], options.ident)
         if not info or not free:
             status = UNKNOWN
