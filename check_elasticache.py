@@ -224,10 +224,11 @@ def main():
                     n = 5
                 else:
                     n = i
-                cpu = get_cluster_stats(options.node, i * 60, tm - datetime.timedelta(
-                    seconds=n * 60),
-                    tm, metrics[options.metric],
-                    options.ident)
+                cpu = get_cluster_stats(options.node, i * 60, tm -
+                                        datetime.timedelta(
+                                            seconds=n * 60),
+                                        tm, metrics[options.metric],
+                                        options.ident)
                 if not cpu:
                     status = UNKNOWN
                     note = 'Unable to get RDS statistics'
