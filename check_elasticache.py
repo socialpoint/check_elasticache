@@ -14,7 +14,7 @@ Monitoring Toolkit
 """
 
 import boto.elasticache
-import optparse
+import argparse
 import sys
 import datetime
 import json
@@ -110,26 +110,28 @@ def main():
     units = ('percent', 'GB')
 
     # Parse options
-    parser = optparse.OptionParser()
-    parser.add_option('-r', '--region', help='AWS region')
-    parser.add_option('-l', '--list', help='list of all ElastiCache clusters',
-                      action='store_true', default=False, dest='cluster_list')
-    parser.add_option('-i', '--ident', help='ElastiCache cluster identifier')
-    parser.add_option('-p', '--print', help='print status and other details ' +
-                      'for a given ElastiCache cluster',
-                      action='store_true', default=False, dest='info')
-    parser.add_option('-m', '--metric', help='metric to check: [%s]' %
-                      ', '.join(metrics.keys()))
-    parser.add_option('-w', '--warn', help='warning threshold')
-    parser.add_option('-c', '--crit', help='critical threshold')
-    parser.add_option('-u', '--unit', help='unit of thresholds for "memory" '
-                      'metrics: [%s]. Default: percent' % ', '.join(units),
-                      default='percent')
-    parser.add_option('--no-threshold-calc', help='in redis do not calculate' +
-                      ' the correct threshold acording the number of cpus',
-                      action='store_true', default=False,
-                      dest='no_threshold_calc')
-    options, args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-r', '--region', help='AWS region', required=True)
+    parser.add_argument('-l', '--list',
+                        help='list of all ElastiCache clusters',
+                        action='store_true', default=False,
+                        dest='cluster_list')
+    parser.add_argument('-i', '--ident', help='ElastiCache cluster identifier')
+    parser.add_argument('-p', '--print', help='print status and other ' +
+                        'details for a given ElastiCache cluster',
+                        action='store_true', default=False, dest='info')
+    parser.add_argument('-m', '--metric', help='metric to check: [%s]' %
+                        ', '.join(metrics.keys()))
+    parser.add_argument('-w', '--warn', help='warning threshold')
+    parser.add_argument('-c', '--crit', help='critical threshold')
+    parser.add_argument('-u', '--unit', help='unit of thresholds for "memory" '
+                        'metrics: [%s]. Default: percent' % ', '.join(units),
+                        default='percent')
+    parser.add_argument('--no-threshold-calc', help='in redis do not ' +
+                        'calculate the correct threshold acording the number' +
+                        ' of cpus', action='store_true', default=False,
+                        dest='no_threshold_calc')
+    options = parser.parse_args()
 
     # Check args
     if len(sys.argv) == 1:

@@ -12,7 +12,7 @@ Install it in your Nagios plugins directory, create a [Nagios command](http://na
 
 ###Setup requirements
 
-This script requires the Boto library and the following IAM permissions:
+This script requires python 2.7, the Boto library and the following IAM permissions:
 - elasticache:DescribeCacheClusters
 - cloudwatch:GetMetricStatistics
 
