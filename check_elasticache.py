@@ -20,7 +20,7 @@ import datetime
 import json
 
 
-def get_instance_info(region, indentifier=None):
+def get_cluster_info(region, indentifier=None):
     """Function for fetching ElastiCache details"""
     elasticache = boto.elasticache.connect_to_region(region)
     try:
@@ -40,7 +40,7 @@ def get_instance_info(region, indentifier=None):
     return info
 
 
-def get_instance_stats(step, start_time, end_time, metric, indentifier):
+def get_cluster_stats(step, start_time, end_time, metric, indentifier):
     """Function for fetching ElastiCache statistics from CloudWatch"""
     cw = boto.connect_cloudwatch()
     result = cw.get_metric_statistics(step,
@@ -109,11 +109,11 @@ def main():
     # Parse options
     parser = optparse.OptionParser()
     parser.add_option('-r', '--region', help='AWS region')
-    parser.add_option('-l', '--list', help='list of all ElastiCache instances',
-                      action='store_true', default=False, dest='instance_list')
-    parser.add_option('-i', '--ident', help='ElastiCache instance identifier')
+    parser.add_option('-l', '--list', help='list of all ElastiCache clusters',
+                      action='store_true', default=False, dest='cluster_list')
+    parser.add_option('-i', '--ident', help='ElastiCache cluster identifier')
     parser.add_option('-p', '--print', help='print status and other details ' +
-                      'for a given ElastiCache instance',
+                      'for a given ElastiCache cluster',
                       action='store_true', default=False, dest='info')
     parser.add_option('-m', '--metric', help='metric to check: [%s]' %
                       ', '.join(metrics.keys()))
@@ -131,19 +131,19 @@ def main():
     elif not options.region:
         parser.print_help()
         parser.error('AWS region is not set.')
-    elif options.instance_list:
-        info = get_instance_info(options.region)
+    elif options.cluster_list:
+        info = get_cluster_info(options.region)
         print(json.dumps(info, indent=4))
         sys.exit()
     elif not options.ident:
         parser.print_help()
         parser.error('ElastiCache identifier is not set.')
     elif options.info:
-        info = get_instance_info(options.region, options.ident)
+        info = get_cluster_info(options.region, options.ident)
         if info:
             print(json.dumps(info, indent=4))
         else:
-            print 'No ElastiCache instance "%s" found on your AWS account.' % \
+            print 'No ElastiCache cluster "%s" found on your AWS account.' % \
                   options.ident
         sys.exit()
     elif not options.metric or options.metric not in metrics.keys():
@@ -163,10 +163,10 @@ def main():
 
     # ElastiCache Status
     if options.metric == 'status':
-        info = get_instance_info(options.region, options.ident)
+        info = get_cluster_info(options.region, options.ident)
         if not info:
             status = CRITICAL
-            note = 'Unable to get ElastiCache instance'
+            note = 'Unable to get ElastiCache cluster'
         else:
             status = OK
             note = '%s %s. Status: %s' % (info['Engine'],
@@ -197,7 +197,7 @@ def main():
                 n = 5
             else:
                 n = i
-            load = get_instance_stats(i * 60, tm - datetime.timedelta(
+            load = get_cluster_stats(i * 60, tm - datetime.timedelta(
                                       seconds=n * 60),
                                       tm, metrics[options.metric],
                                       options.ident)
@@ -244,8 +244,8 @@ def main():
             parser.print_help()
             parser.error('Unit is not valid.')
 
-        info = get_instance_info(options.region, options.ident)
-        free = get_instance_stats(60, tm - datetime.timedelta(seconds=60), tm,
+        info = get_cluster_info(options.region, options.ident)
+        free = get_cluster_stats(60, tm - datetime.timedelta(seconds=60), tm,
                                   metrics[options.metric], options.ident)
         if not info or not free:
             status = UNKNOWN
