@@ -231,7 +231,7 @@ def main():
                                         options.ident)
                 if not cpu:
                     status = UNKNOWN
-                    note = 'Unable to get RDS statistics'
+                    note = 'Unable to get ElastiCache statistics'
                     perf_data = None
                     break
                 cpus.append(str(cpu))
@@ -256,8 +256,7 @@ def main():
             note = 'Load average: %s%%' % '%, '.join(cpus)
             perf_data = ' '.join(perf_data)
 
-    # RDS Free Storage
-    # RDS Free Memory
+    # ElastiCache Free Memory
     elif options.metric in ['memory']:
         # Check thresholds
         try:
