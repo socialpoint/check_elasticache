@@ -104,7 +104,7 @@ def main():
     # ElastiCache metrics as listed on
     # http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/elasticache-metricscollected.html # noqa
     metrics = {'status': 'ElastiCache availability',
-               'load': 'CPUUtilization',
+               'cpu': 'CPUUtilization',
                'memory': 'FreeableMemory'}
 
     units = ('percent', 'GB')
@@ -176,7 +176,7 @@ def main():
                    info['EngineVersion'], info['CacheClusterStatus'])
 
     # ElastiCache Load Average
-    elif options.metric == 'load':
+    elif options.metric == 'cpu':
         # Check thresholds
         try:
             warns = [float(x) for x in options.warn.split(',')]
@@ -188,29 +188,29 @@ def main():
             parser.error('Warning and critical thresholds should be 3 comma ' +
                          'separated numbers, e.g. 20,15,10')
 
-        loads = []
+        cpus = []
         fail = False
         j = 0
         perf_data = []
         for i in [1, 5, 15]:
             if i == 1:
                 # Some stats are delaying to update on CloudWatch.
-                # Let's pick a few points for 1-min load avg and get the last
+                # Let's pick a few points for 1-min cpu avg and get the last
                 # point.
                 n = 5
             else:
                 n = i
-            load = get_cluster_stats(i * 60, tm - datetime.timedelta(
+            cpu = get_cluster_stats(i * 60, tm - datetime.timedelta(
                 seconds=n * 60),
                 tm, metrics[options.metric],
                 options.ident)
-            if not load:
+            if not cpu:
                 status = UNKNOWN
                 note = 'Unable to get RDS statistics'
                 perf_data = None
                 break
-            loads.append(str(load))
-            perf_data.append('load%s=%s;%s;%s;0;100' % (i, load, warns[j],
+            cpus.append(str(cpu))
+            perf_data.append('cpu%s=%s;%s;%s;0;100' % (i, cpu, warns[j],
                              crits[j]))
 
             # Compare thresholds
@@ -218,17 +218,17 @@ def main():
                 if warns[j] > crits[j]:
                     parser.error('Parameter inconsistency: warning threshold' +
                                  ' is greater than critical.')
-                elif load >= crits[j]:
+                elif cpu >= crits[j]:
                     status = CRITICAL
                     fail = True
-                elif load >= warns[j]:
+                elif cpu >= warns[j]:
                     status = WARNING
             j = j + 1
 
         if status != UNKNOWN:
             if status is None:
                 status = OK
-            note = 'Load average: %s%%' % '%, '.join(loads)
+            note = 'Load average: %s%%' % '%, '.join(cpus)
             perf_data = ' '.join(perf_data)
 
     # RDS Free Storage
