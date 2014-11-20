@@ -107,7 +107,8 @@ def main():
     # http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/elasticache-metricscollected.html # noqa
     metrics = {'status': 'ElastiCache availability',
                'cpu': 'CPUUtilization',
-               'memory': 'FreeableMemory'}
+               'memory': 'FreeableMemory',
+               'swap': 'SwapUsage'}
 
     units = ('percent', 'GB')
 
@@ -313,6 +314,40 @@ def main():
                                                    warn,
                                                    crit,
                                                    val_max)
+    # ElastiCache swap
+    elif options.metric in ['swap']:
+        # Check thresholds
+        try:
+            warn = float(options.warn)
+            crit = float(options.crit)
+        except:
+            parser.error('Warning and critical thresholds should be integers.')
+        if crit < warn:
+            parser.error('Parameter inconsistency: critical threshold is ' +
+                         'greater than warning.')
+
+        info = get_cluster_info(options.region, options.ident)
+        swap = get_cluster_stats(options.node, 60, tm -
+                                 datetime.timedelta(seconds=60), tm,
+                                 metrics[options.metric], options.ident)
+        if not info or not isinstance(swap, float):
+            status = UNKNOWN
+            note = 'Unable to get ElastiCache details and statistics'
+        else:
+            # Convert Bytes to MB
+            swap = swap / 1000000
+            # Compare thresholds
+            if swap >= crit:
+                status = CRITICAL
+            elif swap >= warn:
+                status = WARNING
+
+            if status is None:
+                status = OK
+            note = 'Used swap %s MB' % swap
+            perf_data = 'swap=%sMB;%s;%s;0;' % (swap,
+                                                warn,
+                                                crit)
 
     # Final output
     if status != UNKNOWN and perf_data:
