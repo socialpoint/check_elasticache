@@ -25,7 +25,9 @@ def get_cluster_info(region, indentifier=None):
     elasticache = boto.elasticache.connect_to_region(region)
     try:
         if indentifier:
-            info = elasticache.describe_cache_clusters(indentifier,show_cache_node_info=True)[
+            info = elasticache.describe_cache_clusters(
+                indentifier,
+                show_cache_node_info=True)[
                 'DescribeCacheClustersResponse'][
                 'DescribeCacheClustersResult'][
                 'CacheClusters'][0]
@@ -198,9 +200,9 @@ def main():
             else:
                 n = i
             load = get_cluster_stats(i * 60, tm - datetime.timedelta(
-                                      seconds=n * 60),
-                                      tm, metrics[options.metric],
-                                      options.ident)
+                seconds=n * 60),
+                tm, metrics[options.metric],
+                options.ident)
             if not load:
                 status = UNKNOWN
                 note = 'Unable to get RDS statistics'
@@ -246,7 +248,7 @@ def main():
 
         info = get_cluster_info(options.region, options.ident)
         free = get_cluster_stats(60, tm - datetime.timedelta(seconds=60), tm,
-                                  metrics[options.metric], options.ident)
+                                 metrics[options.metric], options.ident)
         if not info or not free:
             status = UNKNOWN
             note = 'Unable to get ElastiCache details and statistics'
