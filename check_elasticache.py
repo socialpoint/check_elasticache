@@ -125,6 +125,10 @@ def main():
     parser.add_option('-u', '--unit', help='unit of thresholds for "memory" '
                       'metrics: [%s]. Default: percent' % ', '.join(units),
                       default='percent')
+    parser.add_option('--no-threshold-calc', help='in redis do not calculate' +
+                      ' the correct threshold acording the number of cpus',
+                      action='store_true', default=False,
+                      dest='no_threshold_calc')
     options, args = parser.parse_args()
 
     # Check args
@@ -177,53 +181,66 @@ def main():
 
     # ElastiCache Load Average
     elif options.metric == 'cpu':
-        # Check thresholds
-        try:
-            warns = [float(x) for x in options.warn.split(',')]
-            crits = [float(x) for x in options.crit.split(',')]
-            fail = len(warns) + len(crits)
-        except:
-            fail = 0
-        if fail != 6:
-            parser.error('Warning and critical thresholds should be 3 comma ' +
-                         'separated numbers, e.g. 20,15,10')
+        info = get_cluster_info(options.region, options.ident)
+        if not info:
+            status = UNKNOWN
+            note = 'Unable to get ElastiCache details and statistics'
+        else:
+            # Check thresholds
+            try:
+                warns = [float(x) for x in options.warn.split(',')]
+                crits = [float(x) for x in options.crit.split(',')]
+                fail = len(warns) + len(crits)
+            except:
+                fail = 0
+            if fail != 6:
+                parser.error('Warning and critical thresholds should be 3 ' +
+                             'comma separated numbers, e.g. 20,15,10')
 
-        cpus = []
-        fail = False
-        j = 0
-        perf_data = []
-        for i in [1, 5, 15]:
-            if i == 1:
-                # Some stats are delaying to update on CloudWatch.
-                # Let's pick a few points for 1-min cpu avg and get the last
-                # point.
-                n = 5
-            else:
-                n = i
-            cpu = get_cluster_stats(i * 60, tm - datetime.timedelta(
-                seconds=n * 60),
-                tm, metrics[options.metric],
-                options.ident)
-            if not cpu:
-                status = UNKNOWN
-                note = 'Unable to get RDS statistics'
-                perf_data = None
-                break
-            cpus.append(str(cpu))
-            perf_data.append('cpu%s=%s;%s;%s;0;100' % (i, cpu, warns[j],
-                             crits[j]))
+            # Because redis only uses 1 cpu, we need to calculate the new
+            # thresholds as explained in
+            # http://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/CacheMetrics.WhichShouldIMonitor.html # noqa
+            if not options.no_threshold_calc and info['Engine'] == 'redis':
+                warns = [x / elasticache_classes[info['CacheNodeType']]['vcpu']
+                         for x in warns]
+                crits = [x / elasticache_classes[info['CacheNodeType']]['vcpu']
+                         for x in crits]
+            cpus = []
+            fail = False
+            j = 0
+            perf_data = []
+            for i in [1, 5, 15]:
+                if i == 1:
+                    # Some stats are delaying to update on CloudWatch.
+                    # Let's pick a few points for 1-min cpu avg and get the
+                    # last point.
+                    n = 5
+                else:
+                    n = i
+                cpu = get_cluster_stats(i * 60, tm - datetime.timedelta(
+                    seconds=n * 60),
+                    tm, metrics[options.metric],
+                    options.ident)
+                if not cpu:
+                    status = UNKNOWN
+                    note = 'Unable to get RDS statistics'
+                    perf_data = None
+                    break
+                cpus.append(str(cpu))
+                perf_data.append('cpu%s=%s;%s;%s;0;100' % (i, cpu, warns[j],
+                                 crits[j]))
 
-            # Compare thresholds
-            if not fail:
-                if warns[j] > crits[j]:
-                    parser.error('Parameter inconsistency: warning threshold' +
-                                 ' is greater than critical.')
-                elif cpu >= crits[j]:
-                    status = CRITICAL
-                    fail = True
-                elif cpu >= warns[j]:
-                    status = WARNING
-            j = j + 1
+                # Compare thresholds
+                if not fail:
+                    if warns[j] > crits[j]:
+                        parser.error('Parameter inconsistency: warning ' +
+                                     ' threshold is greater than critical.')
+                    elif cpu >= crits[j]:
+                        status = CRITICAL
+                        fail = True
+                    elif cpu >= warns[j]:
+                        status = WARNING
+                j = j + 1
 
         if status != UNKNOWN:
             if status is None:
