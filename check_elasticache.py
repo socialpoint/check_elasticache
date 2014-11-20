@@ -42,7 +42,7 @@ def get_cluster_info(region, indentifier=None):
     return info
 
 
-def get_cluster_stats(step, start_time, end_time, metric, indentifier):
+def get_cluster_stats(node, step, start_time, end_time, metric, indentifier):
     """Function for fetching ElastiCache statistics from CloudWatch"""
     cw = boto.connect_cloudwatch()
     result = cw.get_metric_statistics(step,
@@ -51,8 +51,10 @@ def get_cluster_stats(step, start_time, end_time, metric, indentifier):
                                       metric,
                                       'AWS/ElastiCache',
                                       'Average',
-                                      dimensions={'CacheClusterId':
-                                                  [indentifier]}
+                                      dimensions={
+                                          'CacheClusterId': [indentifier],
+                                          'CacheNodeId': ['%04d' % node],
+                                          }
                                       )
     if result:
         if len(result) > 1:
@@ -122,6 +124,9 @@ def main():
                         action='store_true', default=False, dest='info')
     parser.add_argument('-m', '--metric', help='metric to check: [%s]' %
                         ', '.join(metrics.keys()))
+    parser.add_argument('-n', '--node',
+                        help='check only specified node number',
+                        type=int, default=1)
     parser.add_argument('-w', '--warn', help='warning threshold')
     parser.add_argument('-c', '--crit', help='critical threshold')
     parser.add_argument('-u', '--unit', help='unit of thresholds for "memory" '
@@ -219,7 +224,7 @@ def main():
                     n = 5
                 else:
                     n = i
-                cpu = get_cluster_stats(i * 60, tm - datetime.timedelta(
+                cpu = get_cluster_stats(options.node, i * 60, tm - datetime.timedelta(
                     seconds=n * 60),
                     tm, metrics[options.metric],
                     options.ident)
@@ -267,7 +272,7 @@ def main():
             parser.error('Unit is not valid.')
 
         info = get_cluster_info(options.region, options.ident)
-        free = get_cluster_stats(60, tm - datetime.timedelta(seconds=60), tm,
+        free = get_cluster_stats(options.node, 60, tm - datetime.timedelta(seconds=60), tm,
                                  metrics[options.metric], options.ident)
         if not info or not free:
             status = UNKNOWN

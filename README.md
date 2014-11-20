@@ -50,3 +50,8 @@ Check the current memory usage of 'cluster1'. Will return WARNING or CRITICAL if
 ```
 check_elasticache.py --region us-east-1 -i cluster1 -m memory -w 10 -c 5
 ```
+
+If 'cluster1' is memcache, it may have multiple nodes. Check memory from the second node.
+```
+check_elasticache.py --region us-east-1 -i cluster1 -m memory -w 10 -c 5 --node 2
+```
