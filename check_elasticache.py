@@ -16,8 +16,8 @@ Monitoring Toolkit
 import boto.elasticache
 import optparse
 import sys
-import pprint
 import datetime
+import json
 
 
 def get_instance_info(region, indentifier=None):
@@ -25,12 +25,12 @@ def get_instance_info(region, indentifier=None):
     elasticache = boto.elasticache.connect_to_region(region)
     try:
         if indentifier:
-            info = elasticache.describe_cache_clusters(indentifier)[
+            info = elasticache.describe_cache_clusters(indentifier,show_cache_node_info=True)[
                 'DescribeCacheClustersResponse'][
                 'DescribeCacheClustersResult'][
                 'CacheClusters'][0]
         else:
-            info = [str(v['CacheClusterId'])
+            info = [v['CacheClusterId']
                     for v in elasticache.describe_cache_clusters()[
                         'DescribeCacheClustersResponse'][
                         'DescribeCacheClustersResult'][
@@ -133,7 +133,7 @@ def main():
         parser.error('AWS region is not set.')
     elif options.instance_list:
         info = get_instance_info(options.region)
-        pprint.pprint(info)
+        print(json.dumps(info, indent=4))
         sys.exit()
     elif not options.ident:
         parser.print_help()
@@ -141,7 +141,7 @@ def main():
     elif options.info:
         info = get_instance_info(options.region, options.ident)
         if info:
-            pprint.pprint(info)
+            print(json.dumps(info, indent=4))
         else:
             print 'No ElastiCache instance "%s" found on your AWS account.' % \
                   options.ident
