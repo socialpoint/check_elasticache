@@ -78,27 +78,28 @@ def main():
 
     # Cache instance classes as listed on
     # http://aws.amazon.com/elasticache/pricing/
-    elasticache_classes = {'cache.t2.micro': 0.555,
-                           'cache.t2.small': 1.55,
-                           'cache.t2.medium': 3.22,
-                           'cache.m3.medium': 2.78,
-                           'cache.m3.large': 6.05,
-                           'cache.m3.xlarge': 13.3,
-                           'cache.m3.2xlarge': 27.9,
-                           'cache.r3.large': 13.5,
-                           'cache.r3.xlarge': 28.4,
-                           'cache.r3.2xlarge': 58.2,
-                           'cache.r3.4xlarge': 118,
-                           'cache.r3.8xlarge': 237,
-                           'cache.m1.small': 1.3,
-                           'cache.m1.medium': 3.35,
-                           'cache.m1.large': 7.1,
-                           'cache.m1.xlarge': 14.6,
-                           'cache.m2.xlarge': 16.7,
-                           'cache.m2.2xlarge': 33.8,
-                           'cache.m2.4xlarge': 68,
-                           'cache.c1.xlarge': 6.6,
-                           'cache.t1.micro': 0.213}
+    elasticache_classes = {
+        'cache.t2.micro': {'memory': 0.555, 'vcpu': 1},
+        'cache.t2.small': {'memory': 1.55, 'vcpu': 1},
+        'cache.t2.medium': {'memory': 3.22, 'vcpu': 2},
+        'cache.m3.medium': {'memory': 2.78, 'vcpu': 1},
+        'cache.m3.large': {'memory': 6.05, 'vcpu': 2},
+        'cache.m3.xlarge': {'memory': 13.3, 'vcpu': 4},
+        'cache.m3.2xlarge': {'memory': 27.9, 'vcpu': 8},
+        'cache.r3.large': {'memory': 13.5, 'vcpu': 2},
+        'cache.r3.xlarge': {'memory': 28.4, 'vcpu': 4},
+        'cache.r3.2xlarge': {'memory': 58.2, 'vcpu': 8},
+        'cache.r3.4xlarge': {'memory': 118, 'vcpu': 16},
+        'cache.r3.8xlarge': {'memory': 237, 'vcpu': 32},
+        'cache.m1.small': {'memory': 1.3, 'vcpu': 1},
+        'cache.m1.medium': {'memory': 3.35, 'vcpu': 1},
+        'cache.m1.large': {'memory': 7.1, 'vcpu': 2},
+        'cache.m1.xlarge': {'memory': 14.6, 'vcpu': 4},
+        'cache.m2.xlarge': {'memory': 16.7, 'vcpu': 2},
+        'cache.m2.2xlarge': {'memory': 33.8, 'vcpu': 4},
+        'cache.m2.4xlarge': {'memory': 68, 'vcpu': 8},
+        'cache.c1.xlarge': {'memory': 6.6, 'vcpu': 8},
+        'cache.t1.micro': {'memory': 0.213, 'vcpu': 1}}
 
     # ElastiCache metrics as listed on
     # http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/elasticache-metricscollected.html # noqa
@@ -255,7 +256,8 @@ def main():
         else:
             if options.metric == 'memory':
                 try:
-                    storage = elasticache_classes[info['CacheNodeType']]
+                    storage = elasticache_classes[
+                        info['CacheNodeType']]['memory']
                 except:
                     print 'Unknown ElastiCache instance class "%s"' % \
                           info.instance_class
