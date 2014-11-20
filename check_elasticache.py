@@ -136,7 +136,7 @@ def main():
         parser.error('AWS region is not set.')
     elif options.cluster_list:
         info = get_cluster_info(options.region)
-        print(json.dumps(info, indent=4))
+        print(json.dumps(info, indent=2))
         sys.exit()
     elif not options.ident:
         parser.print_help()
@@ -144,7 +144,7 @@ def main():
     elif options.info:
         info = get_cluster_info(options.region, options.ident)
         if info:
-            print(json.dumps(info, indent=4))
+            print(json.dumps(info, indent=2))
         else:
             print 'No ElastiCache cluster "%s" found on your AWS account.' % \
                   options.ident
