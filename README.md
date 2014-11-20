@@ -36,9 +36,9 @@ Check the current status of 'cluster1'. Returns CRITICAL if status is not 'avail
 check_elasticache.py --region us-east-1 -i cluster1 -m status
 ```
 
-Check the current cpu load of 'cluster1'. Will return WARNING or CRITICAL if the result is over the specified thresholds.
+Check the current cpu of 'cluster1'. Will return WARNING or CRITICAL if the result is over the specified thresholds.
 ```
-check_elasticache.py --region us-east-1 -i cluster1 -m load -w 90,85,80 -c 98,95,90
+check_elasticache.py --region us-east-1 -i cluster1 -m cpu -w 90,85,80 -c 98,95,90
 ```
 
 Check the current memory usage of 'cluster1'. Will return WARNING or CRITICAL if the result is over the specified thresholds.
