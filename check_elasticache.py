@@ -80,34 +80,99 @@ def main():
 
     # Cache instance classes as listed on
     # http://aws.amazon.com/elasticache/pricing/
+    # For redis_maxmemory:
+    # http://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/CacheParameterGroups.Redis.html # noqa
     elasticache_classes = {
-        'cache.t2.micro': {'memory': 0.555, 'vcpu': 1},
-        'cache.t2.small': {'memory': 1.55, 'vcpu': 1},
-        'cache.t2.medium': {'memory': 3.22, 'vcpu': 2},
-        'cache.m3.medium': {'memory': 2.78, 'vcpu': 1},
-        'cache.m3.large': {'memory': 6.05, 'vcpu': 2},
-        'cache.m3.xlarge': {'memory': 13.3, 'vcpu': 4},
-        'cache.m3.2xlarge': {'memory': 27.9, 'vcpu': 8},
-        'cache.r3.large': {'memory': 13.5, 'vcpu': 2},
-        'cache.r3.xlarge': {'memory': 28.4, 'vcpu': 4},
-        'cache.r3.2xlarge': {'memory': 58.2, 'vcpu': 8},
-        'cache.r3.4xlarge': {'memory': 118, 'vcpu': 16},
-        'cache.r3.8xlarge': {'memory': 237, 'vcpu': 32},
-        'cache.m1.small': {'memory': 1.3, 'vcpu': 1},
-        'cache.m1.medium': {'memory': 3.35, 'vcpu': 1},
-        'cache.m1.large': {'memory': 7.1, 'vcpu': 2},
-        'cache.m1.xlarge': {'memory': 14.6, 'vcpu': 4},
-        'cache.m2.xlarge': {'memory': 16.7, 'vcpu': 2},
-        'cache.m2.2xlarge': {'memory': 33.8, 'vcpu': 4},
-        'cache.m2.4xlarge': {'memory': 68, 'vcpu': 8},
-        'cache.c1.xlarge': {'memory': 6.6, 'vcpu': 8},
-        'cache.t1.micro': {'memory': 0.213, 'vcpu': 1}}
+        'cache.t2.micro': {
+            'memory': 0.555,
+            'redis_maxmemory': 581959680,
+            'vcpu': 1},
+        'cache.t2.small': {
+            'memory': 1.55,
+            'redis_maxmemory': 1665138688,
+            'vcpu': 1},
+        'cache.t2.medium': {
+            'memory': 3.22,
+            'redis_maxmemory': 3461349376,
+            'vcpu': 2},
+        'cache.m3.medium': {
+            'memory': 2.78,
+            'redis_maxmemory': 2988441600,
+            'vcpu': 1},
+        'cache.m3.large': {
+            'memory': 6.05,
+            'redis_maxmemory': 6501171200,
+            'vcpu': 2},
+        'cache.m3.xlarge': {
+            'memory': 13.3,
+            'redis_maxmemory': 14260633600,
+            'vcpu': 4},
+        'cache.m3.2xlarge': {
+            'memory': 27.9,
+            'redis_maxmemory': 29989273600,
+            'vcpu': 8},
+        'cache.r3.large': {
+            'memory': 13.5,
+            'redis_maxmemory': 14470348800,
+            'vcpu': 2},
+        'cache.r3.xlarge': {
+            'memory': 28.4,
+            'redis_maxmemory': 30513561600,
+            'vcpu': 4},
+        'cache.r3.2xlarge': {
+            'memory': 58.2,
+            'redis_maxmemory': 62495129600,
+            'vcpu': 8},
+        'cache.r3.4xlarge': {
+            'memory': 118,
+            'redis_maxmemory': 126458265600,
+            'vcpu': 16},
+        'cache.r3.8xlarge': {
+            'memory': 237,
+            'redis_maxmemory': 254384537600,
+            'vcpu': 32},
+        'cache.m1.small': {
+            'memory': 1.3,
+            'redis_maxmemory': 943718400,
+            'vcpu': 1},
+        'cache.m1.medium': {
+            'memory': 3.35,
+            'redis_maxmemory': 3093299200,
+            'vcpu': 1},
+        'cache.m1.large': {
+            'memory': 7.1,
+            'redis_maxmemory': 7025459200,
+            'vcpu': 2},
+        'cache.m1.xlarge': {
+            'memory': 14.6,
+            'redis_maxmemory': 14889779200,
+            'vcpu': 4},
+        'cache.m2.xlarge': {
+            'memory': 16.7,
+            'redis_maxmemory': 17091788800,
+            'vcpu': 2},
+        'cache.m2.2xlarge': {
+            'memory': 33.8,
+            'redis_maxmemory': 35022438400,
+            'vcpu': 4},
+        'cache.m2.4xlarge': {
+            'memory': 68,
+            'redis_maxmemory': 70883737600,
+            'vcpu': 8},
+        'cache.c1.xlarge': {
+            'memory': 6.6,
+            'redis_maxmemory': 6501171200,
+            'vcpu': 8},
+        'cache.t1.micro': {
+            'memory': 0.213,
+            'redis_maxmemory': 142606336,
+            'vcpu': 1}}
 
     # ElastiCache metrics as listed on
     # http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/elasticache-metricscollected.html # noqa
     metrics = {'status': 'ElastiCache availability',
                'cpu': 'CPUUtilization',
-               'memory': 'FreeableMemory',
+               'memory': 'BytesUsedForCache',
                'swap': 'SwapUsage'}
 
     units = ('percent', 'GB')
@@ -265,51 +330,52 @@ def main():
             crit = float(options.crit)
         except:
             parser.error('Warning and critical thresholds should be integers.')
-        if crit > warn:
+        if crit < warn:
             parser.error('Parameter inconsistency: critical threshold is ' +
-                         'greater than warning.')
+                         'lower than warning.')
         if options.unit not in units:
             parser.print_help()
             parser.error('Unit is not valid.')
 
         info = get_cluster_info(options.region, options.ident)
-        free = get_cluster_stats(options.node, 60, tm -
-                                 datetime.timedelta(seconds=60), tm,
-                                 metrics[options.metric], options.ident)
-        if not info or not free:
+        used_memory = get_cluster_stats(options.node, 60, tm -
+                                        datetime.timedelta(seconds=60), tm,
+                                        metrics[options.metric], options.ident)
+        if not info or not used_memory:
             status = UNKNOWN
             note = 'Unable to get ElastiCache details and statistics'
         else:
-            if options.metric == 'memory':
-                try:
-                    storage = elasticache_classes[
-                        info['CacheNodeType']]['memory']
-                except:
-                    print 'Unknown ElastiCache instance class "%s"' % \
-                          info.instance_class
-                    sys.exit(UNKNOWN)
-            free = '%.2f' % (free / 1024 ** 3)
-            free_pct = '%.2f' % (float(free) / storage * 100)
+            try:
+                max_memory = float(elasticache_classes[
+                    info['CacheNodeType']]['redis_maxmemory'])
+            except:
+                print 'Unknown ElastiCache instance class "%s"' % \
+                      info.instance_class
+                sys.exit(UNKNOWN)
+
+            #free = '%.2f' % (free / 1024 ** 3)
+            #free_pct = '%.2f' % (float(free) / storage * 100)
+            used_percent = used_memory / max_memory * 100
             if options.unit == 'percent':
-                val = float(free_pct)
+                val = used_percent
                 val_max = 100
             elif options.unit == 'GB':
-                val = float(free)
-                val_max = storage
+                val = used_memory
+                val_max = max_memory
 
             # Compare thresholds
-            if val <= crit:
+            if val >= crit:
                 status = CRITICAL
-            elif val <= warn:
+            elif val >= warn:
                 status = WARNING
 
             if status is None:
                 status = OK
-            note = 'Free %s: %s GB (%.0f%%) of %s GB' % (options.metric,
-                                                         free,
-                                                         float(free_pct),
-                                                         storage)
-            perf_data = 'free_%s=%s;%s;%s;0;%s' % (options.metric,
+            note = 'Used %s: %.2f GB (%.0f%%) of %.2f GB' % (options.metric,
+                   used_memory/1024/1024/1024,
+                   float(used_percent),
+                   max_memory/1024/1024/1024)
+            perf_data = 'used_%s=%s;%s;%s;0;%s' % (options.metric,
                                                    val,
                                                    warn,
                                                    crit,
