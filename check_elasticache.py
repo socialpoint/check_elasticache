@@ -43,7 +43,8 @@ def get_cluster_info(region, identifier=None):
     return info
 
 
-def get_cluster_stats(region, node, step, start_time, end_time, metric, identifier):
+def get_cluster_stats(region, node, step, start_time, end_time, metric,
+                      identifier):
     """Function for fetching ElastiCache statistics from CloudWatch"""
     cw = boto.ec2.cloudwatch.connect_to_region(region)
     result = cw.get_metric_statistics(step,
@@ -251,7 +252,8 @@ def main():
         else:
             status = OK
             note = '%s %s. Status: %s' % (info['Engine'],
-                   info['EngineVersion'], info['CacheClusterStatus'])
+                                          info['EngineVersion'],
+                                          info['CacheClusterStatus'])
 
     # ElastiCache Load Average
     elif options.metric == 'cpu':
@@ -354,8 +356,8 @@ def main():
                       info.instance_class
                 sys.exit(UNKNOWN)
 
-            #free = '%.2f' % (free / 1024 ** 3)
-            #free_pct = '%.2f' % (float(free) / storage * 100)
+            # free = '%.2f' % (free / 1024 ** 3)
+            # free_pct = '%.2f' % (float(free) / storage * 100)
             used_percent = used_memory / max_memory * 100
             if options.unit == 'percent':
                 val = used_percent
@@ -372,10 +374,10 @@ def main():
 
             if status is None:
                 status = OK
-            note = 'Used %s: %.2f GB (%.0f%%) of %.2f GB' % (options.metric,
-                   used_memory/1024/1024/1024,
-                   float(used_percent),
-                   max_memory/1024/1024/1024)
+            note = 'Used %s: %.2f GB (%.0f%%) of %.2f GB' % \
+                   (options.metric, used_memory/1024/1024/1024,
+                    float(used_percent),
+                    max_memory/1024/1024/1024)
             perf_data = 'used_%s=%s;%s;%s;0;%s' % (options.metric,
                                                    val,
                                                    warn,
