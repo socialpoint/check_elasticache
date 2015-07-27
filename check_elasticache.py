@@ -14,6 +14,7 @@ Monitoring Toolkit
 """
 
 import boto.elasticache
+import boto.ec2.cloudwatch
 import argparse
 import sys
 import datetime
@@ -42,9 +43,9 @@ def get_cluster_info(region, indentifier=None):
     return info
 
 
-def get_cluster_stats(node, step, start_time, end_time, metric, indentifier):
+def get_cluster_stats(region, node, step, start_time, end_time, metric, identifier):
     """Function for fetching ElastiCache statistics from CloudWatch"""
-    cw = boto.connect_cloudwatch()
+    cw = boto.ec2.cloudwatch.connect_to_region(region)
     result = cw.get_metric_statistics(step,
                                       start_time,
                                       end_time,
@@ -52,7 +53,7 @@ def get_cluster_stats(node, step, start_time, end_time, metric, indentifier):
                                       'AWS/ElastiCache',
                                       'Average',
                                       dimensions={
-                                          'CacheClusterId': [indentifier],
+                                          'CacheClusterId': [identifier],
                                           'CacheNodeId': ['%04d' % node],
                                           }
                                       )
@@ -290,8 +291,8 @@ def main():
                     n = 5
                 else:
                     n = i
-                cpu = get_cluster_stats(options.node, i * 60, tm -
-                                        datetime.timedelta(
+                cpu = get_cluster_stats(options.region, options.node, i * 60,
+                                        tm - datetime.timedelta(
                                             seconds=n * 60),
                                         tm, metrics[options.metric],
                                         options.ident)
