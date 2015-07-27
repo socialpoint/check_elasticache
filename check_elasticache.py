@@ -21,13 +21,13 @@ import datetime
 import json
 
 
-def get_cluster_info(region, indentifier=None):
+def get_cluster_info(region, identifier=None):
     """Function for fetching ElastiCache details"""
     elasticache = boto.elasticache.connect_to_region(region)
     try:
-        if indentifier:
+        if identifier:
             info = elasticache.describe_cache_clusters(
-                indentifier,
+                identifier,
                 show_cache_node_info=True)[
                 'DescribeCacheClustersResponse'][
                 'DescribeCacheClustersResult'][
