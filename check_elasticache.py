@@ -341,7 +341,7 @@ def main():
             parser.error('Unit is not valid.')
 
         info = get_cluster_info(options.region, options.ident)
-        used_memory = get_cluster_stats(options.node, 60, tm -
+        used_memory = get_cluster_stats(options.region, options.node, 60, tm -
                                         datetime.timedelta(seconds=60), tm,
                                         metrics[options.metric], options.ident)
         if not info or not used_memory:
@@ -396,7 +396,7 @@ def main():
                          'greater than warning.')
 
         info = get_cluster_info(options.region, options.ident)
-        swap = get_cluster_stats(options.node, 60, tm -
+        swap = get_cluster_stats(options.region, options.node, 60, tm -
                                  datetime.timedelta(seconds=60), tm,
                                  metrics[options.metric], options.ident)
         if not info or not isinstance(swap, float):
